@@ -1,0 +1,1 @@
+# VeriCred Pydantic schemas package.
