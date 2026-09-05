@@ -1,0 +1,1 @@
+import Button from "../common/Button"; import { switchToSepolia } from "../../services/blockchain/wallet"; export default function NetworkSwitcher(){return <Button variant="secondary" onClick={()=>switchToSepolia().catch(e=>alert(e.message))}>Switch to Sepolia</Button>}

@@ -1,0 +1,1 @@
+import { formatAddress } from "../../utils/formatAddress"; import useWallet from "../../hooks/useWallet"; export default function IssuerProfile(){const {account}=useWallet();return <div className="card"><div className="avatar">I</div><h2>Issuer workspace</h2><p className="muted">Connected wallet</p><p className="mono">{formatAddress(account,8)}</p></div>}

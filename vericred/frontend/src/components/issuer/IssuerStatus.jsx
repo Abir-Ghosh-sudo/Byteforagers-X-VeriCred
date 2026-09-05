@@ -1,0 +1,1 @@
+export default function IssuerStatus({authorized=true}){return <div className={`issuer-status ${authorized?"active":"inactive"}`}><span className="dot"/><div><strong>{authorized?"Authorized issuer":"Not authorized"}</strong><small>{authorized?"Your wallet can issue soulbound certificates.":"Ask the admin to add your wallet."}</small></div></div>}

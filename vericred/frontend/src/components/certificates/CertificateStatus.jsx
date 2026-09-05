@@ -1,0 +1,1 @@
+export default function CertificateStatus({valid,revoked}){return <div className={`big-status ${valid&&!revoked?"ok":"bad"}`}><strong>{valid&&!revoked?"✓ VERIFIED":"✕ NOT VALID"}</strong><span>{revoked?"This certificate has been revoked.":valid?"Certificate exists and is valid on-chain.":"Certificate could not be verified."}</span></div>}

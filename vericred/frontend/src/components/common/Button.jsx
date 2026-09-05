@@ -1,0 +1,1 @@
+export default function Button({children,variant="primary",loading=false,disabled,...props}){return <button className={`btn btn-${variant}`} disabled={disabled||loading} {...props}>{loading?<span className="spinner small"/>:children}</button>}
