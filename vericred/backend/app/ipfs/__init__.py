@@ -1,0 +1,1 @@
+# VeriCred IPFS integration package.

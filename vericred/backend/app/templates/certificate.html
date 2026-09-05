@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>VeriCred Certificate</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        .certificate {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 50px;
+            background: #ffffff;
+            border: 2px solid #1f2937;
+            text-align: center;
+        }
+
+        .brand {
+            font-size: 18px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 42px;
+            margin: 0 0 12px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+
+        .recipient {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 25px 0;
+        }
+
+        .course {
+            font-size: 22px;
+            margin-bottom: 35px;
+        }
+
+        .details {
+            margin: 30px auto;
+            max-width: 650px;
+            text-align: left;
+        }
+
+        .detail {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 12px 0;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .value {
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .status {
+            margin: 30px 0;
+            padding: 12px;
+            border: 1px solid #1f2937;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .verification {
+            margin-top: 25px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: #ffffff;
+            }
+
+            .certificate {
+                max-width: none;
+                border: 2px solid #1f2937;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="certificate">
+
+        <div class="brand">
+            VeriCred
+        </div>
+
+        <h1 class="title">
+            Certificate of Achievement
+        </h1>
+
+        <div class="subtitle">
+            This certificate is digitally verifiable on-chain.
+        </div>
+
+        <div class="recipient">
+            {{ name }}
+        </div>
+
+        <div class="course">
+            has successfully completed
+            <strong>{{ course }}</strong>
+        </div>
+
+        <div class="details">
+
+            <div class="detail">
+                <span class="label">Certificate ID</span>
+                <span class="value">
+                    #{{ token_id }}
+                </span>
+            </div>
+
+            <div class="detail">
+                <span class="label">Issuer</span>
+                <span class="value">
+                    {{ issuer }}
+                </span>
+            </div>
+
+            <div class="detail">
+                <span class="label">Issue Date</span>
+                <span class="value">
+                    {{ date }}
+                </span>
+            </div>
+
+            <div class="detail">
+                <span class="label">Recipient Wallet</span>
+                <span class="value">
+                    {{ recipient }}
+                </span>
+            </div>
+
+        </div>
+
+        <div class="status">
+            {{ status }}
+        </div>
+
+        <div class="footer">
+            This certificate is backed by a non-transferable
+            blockchain credential.
+
+            Its authenticity can be independently verified
+            using the VeriCred verification system.
+        </div>
+
+        <div class="verification">
+            Verification:
+            {{ verification_url }}
+        </div>
+
+    </div>
+
+</body>
+</html>

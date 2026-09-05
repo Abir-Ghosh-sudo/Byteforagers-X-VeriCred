@@ -4,15 +4,10 @@ from app.services.blockchain_service import blockchain_service
 
 
 class IssuerService:
-    """
-    Business logic for managing and validating certificate issuers.
-    """
-
     def __init__(self) -> None:
         self.blockchain = blockchain_service
 
     def validate_address(self, address: str) -> str:
-        """Validate and normalize an issuer wallet address."""
         return self.blockchain.checksum_address(address)
 
     def prepare_issuer_data(
@@ -21,7 +16,6 @@ class IssuerService:
         name: str,
         email: str | None = None,
     ) -> dict[str, Any]:
-        """Validate and prepare issuer information."""
         if not name or not name.strip():
             raise ValueError("Issuer name is required")
 
@@ -38,7 +32,6 @@ class IssuerService:
         authorized: bool,
         email: str | None = None,
     ) -> dict[str, Any]:
-        """Build a standardized issuer response."""
         return {
             "address": self.validate_address(address),
             "name": name,
@@ -51,15 +44,42 @@ class IssuerService:
         address: str,
         authorized: bool,
     ) -> dict[str, Any]:
-        """Build an issuer authorization status response."""
         return {
             "address": self.validate_address(address),
             "authorized": authorized,
         }
 
-    def is_authorized(self, authorized: bool) -> bool:
-        """Return whether an issuer is authorized to mint certificates."""
-        return authorized
+    def is_authorized(self, target: Any) -> bool:
+        """
+        Check whether an issuer is authorized to mint certificates.
+        Supports checking a boolean status directly or verifying
+        a wallet address against the blockchain.
+        """
+        if isinstance(target, bool):
+            return target
+
+        if isinstance(target, str):
+            wallet = self.validate_address(target)
+            return self.blockchain.is_authorized_issuer(wallet)
+
+        return bool(target)
+
+    def get_issuer_status(
+        self,
+        address: str,
+    ) -> dict[str, Any]:
+        """
+        Return the current on-chain authorization status
+        of an issuer wallet.
+        """
+        wallet = self.validate_address(address)
+
+        authorized = self.blockchain.is_authorized_issuer(wallet)
+
+        return self.build_issuer_status(
+            address=wallet,
+            authorized=authorized,
+        )
 
 
 issuer_service = IssuerService()

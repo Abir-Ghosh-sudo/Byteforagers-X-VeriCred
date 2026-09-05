@@ -4,24 +4,64 @@ from app.services.blockchain_service import blockchain_service
 
 
 class VerificationService:
-    """
-    Business logic for publicly verifying certificates
-    using on-chain information.
-    """
-
     def __init__(self) -> None:
         self.blockchain = blockchain_service
 
     def validate_token_id(self, token_id: int) -> int:
-        """Validate a certificate token ID."""
         if token_id < 1:
-            raise ValueError("Token ID must be greater than or equal to 1")
+            raise ValueError(
+                "Token ID must be greater than or equal to 1"
+            )
 
         return token_id
 
     def validate_wallet_address(self, address: str) -> str:
-        """Validate and normalize a wallet address."""
         return self.blockchain.checksum_address(address)
+
+    def get_certificate_data(self, token_id: int) -> dict[str, Any]:
+        token_id = self.validate_token_id(token_id)
+
+        try:
+            return self.blockchain.get_certificate(token_id)
+        except Exception as exc:
+            raise ValueError(
+                f"Certificate not found: {exc}"
+            ) from exc
+
+    def verify_certificate(self, token_id: int) -> dict[str, Any]:
+        token_id = self.validate_token_id(token_id)
+
+        certificate = self.get_certificate_data(token_id)
+
+        valid = self.blockchain.verify_certificate(token_id)
+
+        message = (
+            "Certificate is valid."
+            if valid
+            else "Certificate has been revoked."
+        )
+
+        return self.build_verification_response(
+            valid=valid,
+            token_id=token_id,
+            recipient=certificate["recipient"],
+            issuer=certificate["issuer"],
+            metadata_cid=certificate["metadata_cid"],
+            issued_at=certificate["issued_at"],
+            revoked=certificate["revoked"],
+            message=message,
+        )
+
+    def verify_wallet(
+        self,
+        address: str,
+    ) -> dict[str, Any]:
+        wallet = self.validate_wallet_address(address)
+
+        return {
+            "wallet": wallet,
+            "message": "Wallet address is valid.",
+        }
 
     def build_verification_response(
         self,
@@ -34,14 +74,11 @@ class VerificationService:
         revoked: bool,
         message: str,
     ) -> dict[str, Any]:
-        """
-        Build a standardized certificate verification response.
-        """
         return {
             "valid": valid,
             "token_id": token_id,
-            "recipient": recipient,
-            "issuer": issuer,
+            "recipient": self.validate_wallet_address(recipient),
+            "issuer": self.validate_wallet_address(issuer),
             "metadata_cid": metadata_cid,
             "issued_at": issued_at,
             "revoked": revoked,
@@ -51,16 +88,14 @@ class VerificationService:
     def is_certificate_valid(
         self,
         token_id: int,
-        revoked: bool,
+        revoked: bool | None = None,
     ) -> bool:
-        """
-        Determine whether a certificate should be considered valid.
+        token_id = self.validate_token_id(token_id)
 
-        A revoked certificate is never considered valid.
-        """
-        self.validate_token_id(token_id)
+        if revoked is not None:
+            return not revoked
 
-        return not revoked
+        return self.blockchain.verify_certificate(token_id)
 
     def verify_certificate_data(
         self,
@@ -71,20 +106,18 @@ class VerificationService:
         issued_at: int,
         revoked: bool,
     ) -> dict[str, Any]:
-        """
-        Verify and format certificate information received
-        from the blockchain layer.
-        """
         token_id = self.validate_token_id(token_id)
+
         recipient = self.validate_wallet_address(recipient)
         issuer = self.validate_wallet_address(issuer)
 
-        valid = self.is_certificate_valid(token_id, revoked)
+        valid = not revoked
 
-        if revoked:
-            message = "Certificate has been revoked."
-        else:
-            message = "Certificate is valid."
+        message = (
+            "Certificate is valid."
+            if valid
+            else "Certificate has been revoked."
+        )
 
         return self.build_verification_response(
             valid=valid,
