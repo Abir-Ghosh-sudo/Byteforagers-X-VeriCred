@@ -1,0 +1,1 @@
+# VeriCred application configuration package.

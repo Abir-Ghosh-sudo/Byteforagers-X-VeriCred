@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+web3
+python-dotenv
+httpx
+pydantic
+qrcode[pil]
+reportlab
+python-multipart
