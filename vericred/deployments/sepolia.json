@@ -2,7 +2,7 @@
   "network": "sepolia",
   "chainId": 11155111,
   "contractName": "SoulboundCertificate",
-  "contractAddress": "",
-  "deployer": "",
-  "deployedAt": ""
+  "contractAddress": "0x2707b5bD87c6bf93Ef7Cf9a2e337f8c31100F07F",
+  "deployer": "0x0A49dD45ec28eC0865EA28621126376A863Bced0",
+  "deployedAt": "2026-09-05T17:35:20.620Z"
 }

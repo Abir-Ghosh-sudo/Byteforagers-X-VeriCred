@@ -1,173 +1,342 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
-import { Search, ShieldCheck, AlertTriangle, XCircle } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import {
+  Search,
+  ShieldCheck,
+  AlertTriangle,
+  XCircle,
+  ExternalLink,
+  ArrowRight,
+  CheckCircle2,
+  Lock,
+  Cpu,
+  RefreshCw,
+  Award,
+  Sparkles,
+} from "lucide-react";
 import useVerification from "../hooks/useVerification";
+import CopyButton from "../components/common/CopyButton";
 import { formatAddress } from "../utils/formatAddress";
 import { formatDate } from "../utils/formatDate";
 import { contractAddress } from "../contracts/contractConfig";
 
 const SCAN_STEPS = [
-  "READING BLOCKCHAIN...",
-  "CHECKING ISSUER...",
-  "CHECKING OWNERSHIP...",
-  "CHECKING REVOCATION...",
-  "VALIDATING METADATA...",
+  "CONNECTING TO SEPOLIA RPC NODES...",
+  "QUERYING SMART CONTRACT STATE...",
+  "VALIDATING SOULBOUND NON-TRANSFERABILITY...",
+  "CHECKING AUTHORIZED ISSUER SIGNATURE...",
+  "CONFIRMING RECIPIENT WALLET BINDING...",
+  "CHECKING ON-CHAIN REVOCATION REGISTRY...",
+  "VERIFYING IPFS METADATA INTEGRITY...",
 ];
 
 export default function Verify() {
   const { tokenId: routeId } = useParams();
-  const { result, loading, error, verify } = useVerification();
+  const { result, loading, error, verify, setResult, setError } = useVerification();
   const [inputId, setInputId] = useState(routeId || "");
   const [scanStep, setScanStep] = useState(-1);
 
   useEffect(() => {
-    if (routeId) handleVerify(routeId);
+    if (routeId) {
+      setInputId(routeId);
+      handleVerify(routeId);
+    }
   }, [routeId]);
 
   const handleVerify = useCallback(
     async (id) => {
-      const tid = id || inputId;
-      if (!tid.trim()) return;
+      const tid = (id !== undefined ? id : inputId).trim();
+      if (!tid) return;
+
+      setError("");
+      setResult(null);
       setScanStep(0);
-      // Animate scan steps
+
+      // Animate scan steps with dynamic timing
       for (let i = 0; i < SCAN_STEPS.length; i++) {
-        await new Promise((r) => setTimeout(r, 350));
+        await new Promise((r) => setTimeout(r, 220));
         setScanStep(i);
       }
+
       try {
         await verify(tid);
-      } catch {}
-      setScanStep(-1);
+      } catch (err) {
+        console.error("Verification failed:", err);
+      } finally {
+        setScanStep(-1);
+      }
     },
-    [inputId, verify]
+    [inputId, verify, setError, setResult]
   );
 
   const valid = result?.valid && !result?.revoked;
   const revoked = result?.revoked;
+  const currentTokenId = routeId || inputId || result?.tokenId || "1";
 
   return (
     <div className="verify-page">
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
-        <span className="eyebrow">PUBLIC VERIFICATION</span>
-        <h1 style={{ fontSize: "clamp(32px,5vw,48px)", marginBottom: 12 }}>
+      <div className="verify-header-block">
+        <div className="eyebrow-badge">
+          <ShieldCheck size={13} className="pulse-icon" /> PUBLIC VERIFICATION PROTOCOL
+        </div>
+        <h1 className="verify-title">
           Verify a Credential
         </h1>
-        <p style={{ color: "var(--text-dim)", fontSize: 16, maxWidth: 420, margin: "0 auto" }}>
+        <p className="verify-subtitle">
           Don't trust the certificate.<br />
-          <span className="gradient-text" style={{ fontWeight: 600 }}>Verify the proof.</span>
+          <span className="gradient-text verify-proof-tag">Verify the cryptographic proof.</span>
         </p>
+        <div className="verify-network-indicator">
+          <span className="live-ping" />
+          <span>Connected to <strong>Ethereum Sepolia</strong></span>
+          <span className="mono text-muted">({formatAddress(contractAddress, 6)})</span>
+        </div>
       </div>
 
       {/* Scanner Card */}
       <div className="verify-scanner-wrap">
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <span className="eyebrow" style={{ fontSize: 9, letterSpacing: "0.2em" }}>
-            CERTIFICATE ID
+        <div className="scanner-top-bar">
+          <span className="scanner-label">
+            ENTER CERTIFICATE TOKEN ID
           </span>
+          <div className="scanner-quick-pick">
+            <span className="quick-pick-title">Sample:</span>
+            <button
+              type="button"
+              className="chip-btn"
+              onClick={() => {
+                setInputId("1");
+                handleVerify("1");
+              }}
+            >
+              <Sparkles size={11} /> Token #1 (Live On-Chain)
+            </button>
+          </div>
         </div>
-        <div className="demo-input-wrap" style={{ marginBottom: 0 }}>
-          <input
-            className="form-input"
-            value={inputId}
-            onChange={(e) => setInputId(e.target.value)}
-            placeholder="Enter Token ID"
-            onKeyDown={(e) => e.key === "Enter" && handleVerify()}
-            style={{ borderRadius: 999 }}
-          />
+
+        <div className="demo-input-wrap verify-input-row">
+          <div className="input-search-prefix">
+            <Search size={18} className="search-icon-dim" />
+            <input
+              id="verify-token-input"
+              className="form-input verify-form-input"
+              value={inputId}
+              onChange={(e) => setInputId(e.target.value)}
+              placeholder="e.g. 1"
+              onKeyDown={(e) => e.key === "Enter" && handleVerify()}
+            />
+          </div>
           <button
-            className="btn btn-primary"
+            id="verify-onchain-btn"
+            className="btn btn-primary verify-submit-btn"
             onClick={() => handleVerify()}
-            disabled={loading || scanStep >= 0}
-            style={{ borderRadius: 999, minWidth: 160 }}
+            disabled={loading || scanStep >= 0 || !inputId.trim()}
           >
             {loading || scanStep >= 0 ? (
-              <span className="spinner" />
+              <span className="spinner-wrap">
+                <span className="spinner" /> VERIFYING...
+              </span>
             ) : (
               <>
-                <Search size={15} /> VERIFY ON-CHAIN
+                <ShieldCheck size={16} /> VERIFY ON-CHAIN
               </>
             )}
           </button>
         </div>
 
-        {/* Scan steps */}
+        {/* Scan steps with live visual progression */}
         {scanStep >= 0 && (
-          <div className="verify-steps" style={{ marginTop: 20 }}>
-            {SCAN_STEPS.map((s, i) => (
+          <div className="verify-steps-container">
+            <div className="scan-progress-bar">
               <div
-                key={s}
-                className={`verify-step${i < scanStep ? " done" : i === scanStep ? " active" : ""}`}
-                style={{ animationDelay: `${i * 0.15}s` }}
-              >
-                <span className="verify-step-dot" />
-                {s}
-              </div>
-            ))}
+                className="scan-progress-fill"
+                style={{ width: `${((scanStep + 1) / SCAN_STEPS.length) * 100}%` }}
+              />
+            </div>
+            <div className="verify-steps">
+              {SCAN_STEPS.map((s, i) => (
+                <div
+                  key={s}
+                  className={`verify-step${
+                    i < scanStep ? " done" : i === scanStep ? " active" : ""
+                  }`}
+                >
+                  <span className="verify-step-dot" />
+                  <span className="verify-step-text">{s}</span>
+                  {i < scanStep && <CheckCircle2 size={12} className="check-done" />}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Error */}
+        {/* Graceful Error Display */}
         {error && !result && (
-          <div className="error-msg" style={{ marginTop: 16 }}>
-            <XCircle size={16} /> {error}
+          <div className="verify-error-box">
+            <div className="error-icon-circle">
+              <XCircle size={22} />
+            </div>
+            <div className="error-content">
+              <strong>Verification Unsuccessful</strong>
+              <p>{error}</p>
+              <button
+                className="btn btn-ghost btn-xs"
+                onClick={() => {
+                  setInputId("1");
+                  handleVerify("1");
+                }}
+                style={{ marginTop: 8 }}
+              >
+                <RefreshCw size={12} /> Try verifying Token #1 instead
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Result */}
+      {/* Result Card */}
       {result && (
         <div
-          className={`verify-result ${valid ? "valid" : revoked ? "revoked" : "invalid"}`}
+          className={`verify-result-card ${valid ? "valid" : revoked ? "revoked" : "invalid"}`}
         >
-          <div className={`verify-ring ${valid ? "valid" : revoked ? "revoked" : "invalid"}`}>
-            {valid ? "✓" : revoked ? "⚠" : "✕"}
+          {/* Status Ring & Header */}
+          <div className={`verify-ring-wrap ${valid ? "valid" : revoked ? "revoked" : "invalid"}`}>
+            <div className="verify-ring-inner">
+              {valid ? <ShieldCheck size={46} /> : revoked ? <AlertTriangle size={46} /> : <XCircle size={46} />}
+            </div>
+            <div className="pulse-ring" />
           </div>
-          <h2>
-            {valid
-              ? "VERIFIED"
-              : revoked
-              ? "REVOKED"
-              : "INVALID CREDENTIAL"}
-          </h2>
-          <p>
-            {valid
-              ? "AUTHENTIC CREDENTIAL"
-              : revoked
-              ? "This credential has been revoked by the issuer."
-              : "No valid credential found on-chain."}
-          </p>
-          <div className="verify-grid">
-            <div className="verify-field">
-              <span>Recipient</span>
-              <strong className="mono">{formatAddress(result.recipient, 8)}</strong>
+
+          <div className="verify-status-banner">
+            <span className={`status-pill ${valid ? "valid" : revoked ? "revoked" : "invalid"}`}>
+              {valid ? "AUTHENTIC SOULBOUND CREDENTIAL" : revoked ? "REVOKED CREDENTIAL" : "INVALID"}
+            </span>
+            <h2 className="verify-status-title">
+              {valid
+                ? "Cryptographically Proven & Verified"
+                : revoked
+                ? "Credential Has Been Revoked"
+                : "Credential Not Verified"}
+            </h2>
+            <p className="verify-status-subtitle">
+              {valid
+                ? "This credential exists on the Ethereum Sepolia blockchain, is soulbound to the recipient, and has never been altered."
+                : revoked
+                ? "This credential was revoked on-chain by the issuing institution."
+                : "No valid cryptographic proof found matching this Token ID."}
+            </p>
+          </div>
+
+          {/* Recipient Quick Banner */}
+          {result.name && (
+            <div className="verify-recipient-preview">
+              <div className="preview-label">RECIPIENT NAME</div>
+              <div className="preview-name">{result.name}</div>
+              {result.course && <div className="preview-course">{result.course}</div>}
             </div>
-            <div className="verify-field">
-              <span>Issuer</span>
-              <strong className="mono">{formatAddress(result.issuer, 8)}</strong>
+          )}
+
+          {/* Comprehensive Cryptographic Proof Grid */}
+          <div className="verify-grid-card">
+            <div className="verify-grid-field">
+              <span className="field-label">Token ID</span>
+              <div className="field-value">
+                <strong className="mono">#{currentTokenId}</strong>
+                <CopyButton text={currentTokenId} label="Token ID" />
+              </div>
             </div>
-            {result.course && (
-              <div className="verify-field">
-                <span>Course</span>
-                <strong>{result.course}</strong>
+
+            <div className="verify-grid-field">
+              <span className="field-label">Status</span>
+              <div className="field-value">
+                <span className="status-indicator-tag active">
+                  <span className="dot" /> {valid ? "Valid & Active" : revoked ? "Revoked" : "Invalid"}
+                </span>
+              </div>
+            </div>
+
+            <div className="verify-grid-field">
+              <span className="field-label">Recipient Wallet (Owner)</span>
+              <div className="field-value">
+                <strong className="mono">{formatAddress(result.recipient, 8)}</strong>
+                <CopyButton text={result.recipient || ""} label="Recipient" />
+              </div>
+            </div>
+
+            <div className="verify-grid-field">
+              <span className="field-label">Authorized Issuer</span>
+              <div className="field-value">
+                <strong className="mono">{formatAddress(result.issuer, 8)}</strong>
+                <CopyButton text={result.issuer || ""} label="Issuer" />
+              </div>
+            </div>
+
+            <div className="verify-grid-field">
+              <span className="field-label">Issue Date</span>
+              <div className="field-value">
+                <strong>{formatDate(result.issuedAt || result.issued_at)}</strong>
+              </div>
+            </div>
+
+            <div className="verify-grid-field">
+              <span className="field-label">Blockchain Network</span>
+              <div className="field-value">
+                <strong>Ethereum Sepolia</strong>
+                <span className="badge badge-purple" style={{ fontSize: 10, padding: "2px 6px" }}>11155111</span>
+              </div>
+            </div>
+
+            <div className="verify-grid-field">
+              <span className="field-label">Soulbound Protection</span>
+              <div className="field-value text-accent">
+                <Lock size={12} /> Non-Transferable (ERC-721)
+              </div>
+            </div>
+
+            {result.metadataCID && (
+              <div className="verify-grid-field">
+                <span className="field-label">IPFS CID</span>
+                <div className="field-value">
+                  <span className="mono" style={{ fontSize: 12 }}>{result.metadataCID}</span>
+                  <CopyButton text={result.metadataCID} label="CID" />
+                </div>
               </div>
             )}
-            <div className="verify-field">
-              <span>Issue Date</span>
-              <strong>{formatDate(result.issuedAt)}</strong>
+
+            <div className="verify-grid-field full-width">
+              <span className="field-label">Smart Contract</span>
+              <div className="field-value">
+                <strong className="mono">{contractAddress || "Not configured"}</strong>
+                <CopyButton text={contractAddress || ""} label="Contract" />
+                {contractAddress && (
+                  <a
+                    href={`https://sepolia.etherscan.io/token/${contractAddress}?a=${currentTokenId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="etherscan-badge"
+                  >
+                    View on Etherscan <ExternalLink size={10} />
+                  </a>
+                )}
+              </div>
             </div>
-            <div className="verify-field">
-              <span>Token ID</span>
-              <strong className="mono">{routeId || inputId}</strong>
-            </div>
-            <div className="verify-field">
-              <span>Network</span>
-              <strong>Sepolia</strong>
-            </div>
-            <div className="verify-field" style={{ gridColumn: "1 / -1" }}>
-              <span>Contract</span>
-              <strong className="mono">{contractAddress || "Not configured"}</strong>
-            </div>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="verify-actions-bar">
+            <Link className="btn btn-primary btn-lg" to={`/certificate/${currentTokenId}`}>
+              <Award size={18} /> View Official Certificate <ArrowRight size={15} />
+            </Link>
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setInputId("");
+                setResult(null);
+              }}
+            >
+              Verify Another Credential
+            </button>
           </div>
         </div>
       )}

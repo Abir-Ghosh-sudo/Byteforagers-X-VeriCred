@@ -83,33 +83,39 @@ class BlockchainService:
             ).call()
 
             return {
-                "recipient": certificate[0],
-                "issuer": certificate[1],
-                "metadata_cid": certificate[2],
-                "issued_at": certificate[3],
-                "revoked": certificate[4],
+                "token_id": int(certificate[0]),
+                "recipient": str(certificate[1]),
+                "issuer": str(certificate[2]),
+                "metadata_cid": str(certificate[3]),
+                "issued_at": int(certificate[4]),
+                "revoked": bool(certificate[5]),
             }
 
         except Exception as exc:
-            raise ValueError(
-                f"Unable to retrieve certificate: {exc}"
-            ) from exc
+            msg = str(exc)
+            if "Certificate does not exist" in msg:
+                raise ValueError(f"Certificate #{token_id} does not exist on the blockchain.")
+            raise ValueError(f"Unable to retrieve certificate: {exc}")
 
     def verify_certificate(self, token_id: int) -> bool:
         if token_id < 1:
             raise ValueError("Token ID must be greater than or equal to 1")
 
         try:
-            return bool(
-                self.contract.functions.verifyCertificate(
-                    token_id
-                ).call()
-            )
+            res = self.contract.functions.verifyCertificate(
+                token_id
+            ).call()
+            # verifyCertificate returns (valid, recipient, issuer, metadataCID, issuedAt, revoked)
+            if isinstance(res, (list, tuple)):
+                return bool(res[0])
+            return bool(res)
 
         except Exception as exc:
-            raise ValueError(
-                f"Unable to verify certificate: {exc}"
-            ) from exc
+            msg = str(exc)
+            if "Certificate does not exist" in msg:
+                raise ValueError(f"Certificate #{token_id} does not exist on the blockchain.")
+            raise ValueError(f"Unable to verify certificate: {exc}")
+
 
     def is_authorized_issuer(self, address: str) -> bool:
         checksum_address = self.checksum_address(address)

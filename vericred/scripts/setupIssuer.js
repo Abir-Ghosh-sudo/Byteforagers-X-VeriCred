@@ -1,18 +1,28 @@
 const { ethers } = require("hardhat");
+const path = require("path");
+const fs = require("fs");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
 async function main() {
-  const contractAddress = process.env.CONTRACT_ADDRESS;
-  const issuerAddress = process.env.ISSUER_ADDRESS;
+  const [admin] = await ethers.getSigners();
+  if (!admin) {
+    throw new Error("No admin signer wallet found. Check PRIVATE_KEY in .env");
+  }
+
+  let contractAddress = process.env.CONTRACT_ADDRESS;
+  if (!contractAddress) {
+    const deploymentPath = path.resolve(__dirname, "../deployments/sepolia.json");
+    if (fs.existsSync(deploymentPath)) {
+      const data = JSON.parse(fs.readFileSync(deploymentPath, "utf8"));
+      contractAddress = data.contractAddress;
+    }
+  }
+
+  const issuerAddress = process.env.ISSUER_ADDRESS || admin.address;
 
   if (!contractAddress) {
-    throw new Error("CONTRACT_ADDRESS is not set");
+    throw new Error("CONTRACT_ADDRESS is not set in .env or deployments/sepolia.json");
   }
-
-  if (!issuerAddress) {
-    throw new Error("ISSUER_ADDRESS is not set");
-  }
-
-  const [admin] = await ethers.getSigners();
 
   console.log("Admin:", admin.address);
   console.log("Contract:", contractAddress);

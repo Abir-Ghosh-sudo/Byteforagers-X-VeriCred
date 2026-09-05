@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -9,9 +9,25 @@ import {
   Upload,
   HardDrive,
   Search,
+  Cpu,
+  CheckCircle2,
+  ExternalLink,
+  Sparkles,
+  Zap,
 } from "lucide-react";
+import { contractAddress } from "../contracts/contractConfig";
+import { formatAddress } from "../utils/formatAddress";
 
 export default function Home() {
+  const navigate = useNavigate();
+  const [quickTokenId, setQuickTokenId] = useState("");
+
+  const handleQuickVerify = (e) => {
+    e?.preventDefault();
+    const tid = quickTokenId.trim() || "1";
+    navigate(`/verify/${tid}`);
+  };
+
   return (
     <>
       {/* ── HERO ───────────────────────────────────── */}
@@ -19,6 +35,9 @@ export default function Home() {
         <div className="hero-copy">
           <div className="hero-eyebrow">
             <span className="eyebrow">VERIFIED ON-CHAIN</span>
+            <span className="badge badge-cyan" style={{ fontSize: 10, padding: "3px 10px" }}>
+              <span className="badge-dot" /> SOULBOUND ERC-721
+            </span>
           </div>
           <h1 className="hero-h1">
             Trust Every Credential.
@@ -26,8 +45,8 @@ export default function Home() {
             <span className="gradient-text">Verify It On-Chain.</span>
           </h1>
           <p className="hero-sub">
-            Digital credentials secured by blockchain, backed by cryptographic
-            proof, and verifiable in seconds.
+            Digital credentials secured by Ethereum blockchain, backed by cryptographic
+            proof, non-transferable, and verifiable in seconds without intermediaries.
           </p>
           <div className="hero-ctas">
             <Link className="btn btn-primary btn-lg" to="/verify">
@@ -48,70 +67,130 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── FLOATING CERTIFICATE ──────────────────── */}
-        <div className="hero-cert-wrap">
-          <div className="hero-cert">
-            <div className="cert-header">
-              <span className="cert-brand">VERICRED</span>
-              <span className="cert-verified">
-                <ShieldCheck size={10} /> VERIFIED
+        {/* ── INTERACTIVE ON-CHAIN TRUST & AUDIT TERMINAL ── */}
+        <div className="hero-terminal-wrap">
+          <div className="hero-terminal-card">
+            {/* Terminal Window Header */}
+            <div className="terminal-header">
+              <div className="terminal-dots">
+                <span className="dot-red" />
+                <span className="dot-amber" />
+                <span className="dot-green" />
+              </div>
+              <span className="terminal-title">VERICRED PROTOCOL • AUDIT ENGINE</span>
+              <span className="terminal-live-badge">
+                <span className="live-ping-dot" /> LIVE
               </span>
             </div>
-            <div className="cert-title">
-              <div className="cert-label">CERTIFICATE OF ACHIEVEMENT</div>
-            </div>
-            <div className="cert-divider" />
-            <div className="cert-name">
-              <div className="cert-name-label">AWARDED TO</div>
-              <h2>ABIR GHOSH</h2>
-            </div>
-            <div className="cert-course">B.TECH INFORMATION TECHNOLOGY</div>
-            <div className="cert-institution">
-              Narula Institute of Technology
-            </div>
-            <div className="cert-divider" />
-            <div className="cert-meta">
-              <div>
-                <div className="cert-num">CERTIFICATE #000421</div>
-                <div
-                  className="cert-hash"
-                  style={{ marginTop: 4 }}
+
+            {/* Quick On-Chain Verifier */}
+            <div className="terminal-verifier-box">
+              <div className="terminal-box-label">
+                <span>QUICK ON-CHAIN VERIFIER</span>
+                <span className="text-muted">Instant cryptographic lookup</span>
+              </div>
+              <form className="terminal-input-wrap" onSubmit={handleQuickVerify}>
+                <div className="terminal-input-inner">
+                  <Search size={15} className="terminal-search-icon" />
+                  <input
+                    className="terminal-form-input"
+                    value={quickTokenId}
+                    onChange={(e) => setQuickTokenId(e.target.value)}
+                    placeholder="Enter Token ID (e.g. 1)"
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary btn-sm terminal-submit-btn">
+                  <Zap size={13} /> Verify
+                </button>
+              </form>
+              <div className="terminal-chips">
+                <span className="chips-hint">Quick test:</span>
+                <button
+                  type="button"
+                  className="terminal-chip"
+                  onClick={() => navigate("/verify/1")}
                 >
-                  0x7a1b...9f2e
+                  <Sparkles size={11} /> Token #1 (Sepolia On-Chain)
+                </button>
+              </div>
+            </div>
+
+            {/* Blockchain Audit Features Grid */}
+            <div className="terminal-features-grid">
+              <div className="terminal-feature-item">
+                <div className="feature-icon-wrap">
+                  <Lock size={15} />
+                </div>
+                <div className="feature-text">
+                  <strong>Soulbound Non-Transferable</strong>
+                  <span>Bound permanently to student's recipient wallet</span>
                 </div>
               </div>
-              <span className="cert-ipfs">IPFS PINNED</span>
-              <div className="cert-qr">
-                <svg width="30" height="30" viewBox="0 0 30 30">
-                  <rect width="30" height="30" fill="white" />
-                  <rect x="3" y="3" width="8" height="8" fill="#222" />
-                  <rect x="19" y="3" width="8" height="8" fill="#222" />
-                  <rect x="3" y="19" width="8" height="8" fill="#222" />
-                  <rect x="5" y="5" width="4" height="4" fill="white" />
-                  <rect x="21" y="5" width="4" height="4" fill="white" />
-                  <rect x="5" y="21" width="4" height="4" fill="white" />
-                  <rect x="13" y="3" width="2" height="2" fill="#222" />
-                  <rect x="13" y="7" width="2" height="2" fill="#222" />
-                  <rect x="13" y="13" width="4" height="4" fill="#222" />
-                  <rect x="19" y="13" width="2" height="2" fill="#222" />
-                  <rect x="23" y="19" width="2" height="2" fill="#222" />
-                  <rect x="19" y="23" width="2" height="2" fill="#222" />
-                  <rect x="13" y="19" width="2" height="4" fill="#222" />
-                </svg>
+
+              <div className="terminal-feature-item">
+                <div className="feature-icon-wrap">
+                  <Cpu size={15} />
+                </div>
+                <div className="feature-text">
+                  <strong>Ethereum Sepolia Smart Contract</strong>
+                  <span className="mono">{formatAddress(contractAddress, 8) || "0x2707...F07F"}</span>
+                </div>
+              </div>
+
+              <div className="terminal-feature-item">
+                <div className="feature-icon-wrap">
+                  <HardDrive size={15} />
+                </div>
+                <div className="feature-text">
+                  <strong>Decentralized IPFS Metadata</strong>
+                  <span>Tamper-proof verifiable content hash</span>
+                </div>
+              </div>
+
+              <div className="terminal-feature-item">
+                <div className="feature-icon-wrap">
+                  <CheckCircle2 size={15} />
+                </div>
+                <div className="feature-text">
+                  <strong>Zero-Gas Public Verification</strong>
+                  <span>Anyone can verify proof freely without wallet</span>
+                </div>
               </div>
             </div>
-          </div>
-          {/* Blockchain nodes */}
-          <div className="cert-nodes">
-            <div className="cert-node" />
-            <div className="cert-node" />
-            <div className="cert-node" />
-          </div>
-          <div className="cert-hash">
-            TX 0x3a8f...b72d · BLOCK #4291048
+
+            {/* Terminal Live Telemetry Strip */}
+            <div className="terminal-footer">
+              <div className="telemetry-item">
+                <span className="tel-label">CHAIN ID</span>
+                <span className="tel-val mono">11155111</span>
+              </div>
+              <div className="telemetry-item">
+                <span className="tel-label">STANDARD</span>
+                <span className="tel-val">ERC-721 SOULBOUND</span>
+              </div>
+              <div className="telemetry-item">
+                <span className="tel-label">CONSENSUS</span>
+                <span className="tel-val">POS (SEPOLIA)</span>
+              </div>
+              <div className="telemetry-item">
+                {contractAddress && (
+                  <a
+                    href={`https://sepolia.etherscan.io/address/${contractAddress}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="telemetry-link"
+                  >
+                    Etherscan <ExternalLink size={10} />
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
+
+
+
 
       {/* ── TRUST STRIP ────────────────────────────── */}
       <section className="trust-section">
